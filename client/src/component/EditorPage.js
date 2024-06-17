@@ -1,15 +1,52 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import Client from "../helper/Client";
 import Editor from "../helper/Editor";
+import { initSocket } from "../socket";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 function EditorPage() {
-  const [clients, setClients] = useState([
-    {
-      socketId: 1,
-      username: "Divyansh",
-    },
-    { socketId: 2, username: "Div" },
-  ]);
+  const socketRef = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { roomId } = useParams();
+
+  const [clients, setClients] = useState([]);
+
+  useEffect(() => {
+    const init = async () => {
+      socketRef.current = await initSocket();
+
+      socketRef.current.emit("join", {
+        roomId,
+        username: location.state?.username,
+      });
+
+      //listening for joined event
+
+      socketRef.current.on("joined", ({ clients, username, socketId }) => {
+        if (username !== location.state?.username) {
+          toast.success(`${username} joined the room.`);
+          console.log(`${username} joined`);
+        }
+        setClients(clients);
+      });
+
+      //listener for disconnected
+      socketRef.current.on("disconnected", ({ socketId, username }) => {
+        toast.success(`${username} left the room`);
+        setClients((prev) => {
+          return prev.filter((client) => client.socketId !== socketId);
+        });
+      });
+    };
+    init();
+    return () => {
+      socketRef.current.disconnect();
+      socketRef.current.off("joined");
+      socketRef.current.off("disconnected");
+    };
+  }, []);
 
   return (
     <div className="mainWrap">
