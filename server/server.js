@@ -9,6 +9,7 @@ const PORT = 5000;
 
 const userSocketMap = {};
 function getAllConnectedClients(roomId) {
+  //map
   return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
     (socketId) => {
       return {
@@ -38,6 +39,10 @@ io.on("connection", (socket) => {
 
   socket.on("code-change", ({ roomId, code }) => {
     io.to(roomId).emit("code-change", { code });
+  });
+
+  socket.on("sync-code", ({ socketId, code }) => {
+    io.to(socketId).emit("sync-code", { code });
   });
 
   socket.on("disconnecting", () => {
