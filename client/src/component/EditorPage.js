@@ -22,15 +22,15 @@ function EditorPage() {
     const init = async () => {
       socketRef.current = await initSocket();
 
-      //error handle
-      socketRef.current.on("connect_error", (err) => handleErrors(err));
-      socketRef.current.on("connect_failed", (err) => handleErrors(err));
+      // //error handle
+      // socketRef.current.on("connect_error", (err) => handleErrors(err));
+      // socketRef.current.on("connect_failed", (err) => handleErrors(err));
 
-      function handleErrors(e) {
-        console.log("socket error", e);
-        toast.error("Socket connection failed, try again later.");
-        reactNavigator("/");
-      }
+      // function handleErrors(e) {
+      //   console.log("socket error", e);
+      //   toast.error("Socket connection failed, try again later.");
+      //   reactNavigator("/");
+      // }
 
       socketRef.current.emit("join", {
         roomId,
@@ -62,7 +62,7 @@ function EditorPage() {
 
     init();
     return () => {
-      socketRef.current.disconnect();
+      // socketRef.current.disconnect();
       socketRef.current.off("joined");
       socketRef.current.off("disconnected");
     };
