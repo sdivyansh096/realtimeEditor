@@ -6,7 +6,7 @@ import "codemirror/theme/dracula.css";
 import "codemirror/addon/edit/closetag";
 import "codemirror/addon/edit/closebrackets";
 
-function Editor({ socketRef, roomId }) {
+function Editor({ socketRef, roomId, onCodeChange }) {
   const editorRef = useRef(null);
 
   useEffect(() => {
@@ -23,9 +23,11 @@ function Editor({ socketRef, roomId }) {
       );
 
       editorRef.current.on("change", (instance, changes) => {
-        console.log(changes);
+        // console.log(changes);
         const { origin } = changes;
         const code = instance.getValue();
+        onCodeChange(code);
+
         if (origin !== "setValue") {
           socketRef.current.emit("code-change", {
             roomId,
@@ -33,16 +35,24 @@ function Editor({ socketRef, roomId }) {
           });
         }
       });
-      socketRef.current("code-change", ({ code }) => {
-        if (code !== null) {
-          editorRef.current.setValue(code);
-        }
-      });
       // editorRef.current.setValue();
     }
 
     init();
   }, []);
+
+  useEffect(() => {
+    if (socketRef.current) {
+      socketRef.current("code-change", ({ code }) => {
+        if (code !== null) {
+          editorRef.current.setValue(code);
+        }
+      });
+    }
+    return () => {
+      socketRef.current.off("code-change");
+    };
+  }, [socketRef.current]);
 
   return <textarea id="realtimeEditor"></textarea>;
 }
